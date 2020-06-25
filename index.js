@@ -18,7 +18,7 @@ function createTree(array, rootNodes, customID, childrenProperty) {
         array,
         childNode,
         customID,
-        childrenProperty
+        childrenProperty,
       );
     }
 
@@ -51,12 +51,25 @@ function isObject(o) {
   return Object.prototype.toString.call(o) === '[object Object]';
 }
 
-function deepClone(data) {
+function contains(array, key) {
+  var i = array.length;
+  while (i--) {
+    if (array[i] === key) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function deepClone(data, skippedKeys) {
+  skippedKeys = skippedKeys || [];
   if (Array.isArray(data)) {
-    return data.map(deepClone);
+    return data.map(function(item) {
+      return deepClone(item, skippedKeys);
+    });
   } else if (isObject(data)) {
     return Object.keys(data).reduce(function(o, k) {
-      o[k] = deepClone(data[k]);
+      o[k] = !contains(skippedKeys, k) ? deepClone(data[k], skippedKeys) : data[k];
       return o;
     }, {});
   } else {
@@ -90,20 +103,21 @@ module.exports = function arrayToTree(data, options) {
       parentProperty: 'parent_id',
       childrenProperty: 'children',
       customID: 'id',
-      rootID: '0'
+      rootID: '0',
+      skipKeys: [],
     },
-    options
+    options,
   );
 
   if (!Array.isArray(data)) {
     throw new TypeError('Expected an array but got an invalid argument');
   }
 
-  var grouped = groupByParents(deepClone(data), options);
+  var grouped = groupByParents(deepClone(data, options.skipKeys), options);
   return createTree(
     grouped,
     grouped[options.rootID],
     options.customID,
-    options.childrenProperty
+    options.childrenProperty,
   );
 };

@@ -8,6 +8,7 @@ declare namespace arrayToTree {
 		parentProperty: string;
 		customID: string;
 		rootID: string;
+		skipKeys: string[];
 	}
 
 	type Tree<T> = T & {
